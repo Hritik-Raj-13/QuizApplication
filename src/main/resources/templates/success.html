@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Success</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .success-message {
+            color: #4CAF50;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .tick-image {
+            width: 100px;
+            margin-bottom: 20px;
+        }
+        .start-quiz-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .start-quiz-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<h2 class="success-message" th:text="${message}"></h2>
+<img class="tick-image" src="https://www.pngall.com/wp-content/uploads/9/Green-Tick-Vector-PNG-Images.png" alt="Green Tick">
+<br>
+<a href="/quiz" class="start-quiz-button">Start Quiz</a>
+</body>
+</html>

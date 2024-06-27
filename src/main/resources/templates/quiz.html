@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 80%;
+            max-width: 600px;
+            margin: 50px auto;
+            text-align: center;
+        }
+
+        h1 {
+            color: #4CAF50;
+        }
+
+        .question {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .options {
+            margin-bottom: 20px;
+        }
+
+        .options button {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .options button:hover {
+            background-color: #45a049;
+        }
+
+        .options button.selected {
+            background-color: #ff9800;
+        }
+
+        .navigation {
+            margin-top: 20px;
+        }
+
+        .navigation button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .navigation button:hover {
+            background-color: #0056b3;
+        }
+
+        #camera-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 150px;
+            height: 150px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: none; /* Hide the container initially */
+        }
+
+        #camera {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Quiz</h1>
+    <div id="quiz-container">
+        <!-- Questions will be loaded here dynamically -->
+    </div>
+    <div class="navigation">
+        <button id="next-button" onclick="nextQuestion()">Next</button>
+    </div>
+</div>
+
+<div id="camera-container">
+    <video id="camera" autoplay playsinline></video>
+</div>
+
+<script>
+    let currentQuestionIndex = 0;
+    let questions = [];
+    let userAnswers = [];
+    let videoStream;
+    let captureInterval;
+
+    // Fetch questions from the server
+    fetch('/quiz/questions')
+        .then(response => response.json())
+        .then(data => {
+            questions = data;
+            displayQuestion();
+            startCamera();
+        })
+        .catch(error => console.error('Error fetching questions:', error));
+
+    // Function to display the current question
+    function displayQuestion() {
+        if (currentQuestionIndex >= questions.length) {
+            displayResult();
+            return;
+        }
+
+        const question = questions[currentQuestionIndex];
+        document.getElementById('quiz-container').innerHTML = `
+            <div class="question">${question.question}</div>
+            <div class="options">
+                <button onclick="selectOption(this, '${question.option1}')">${question.option1}</button>
+                <button onclick="selectOption(this, '${question.option2}')">${question.option2}</button>
+                <button onclick="selectOption(this, '${question.option3}')">${question.option3}</button>
+                <button onclick="selectOption(this, '${question.option4}')">${question.option4}</button>
+            </div>
+        `;
+
+        if (userAnswers[currentQuestionIndex]) {
+            const buttons = document.querySelectorAll('.options button');
+            buttons.forEach(button => {
+                if (button.textContent === userAnswers[currentQuestionIndex]) {
+                    button.classList.add('selected');
+                }
+            });
+        }
+    }
+
+    // Function to handle option selection
+    function selectOption(element, selectedOption) {
+        const buttons = document.querySelectorAll('.options button');
+        buttons.forEach(button => button.classList.remove('selected'));
+        element.classList.add('selected');
+        userAnswers[currentQuestionIndex] = selectedOption;
+        console.log('Selected option:', selectedOption);
+    }
+
+    // Function to move to the next question
+    function nextQuestion() {
+        if (!userAnswers[currentQuestionIndex]) {
+            alert('Please select an option before proceeding.');
+            return;
+        }
+        currentQuestionIndex++;
+        displayQuestion();
+    }
+
+    // Function to display the result
+    function displayResult() {
+        let score = 0;
+        for (let i = 0; i < questions.length; i++) {
+            if (userAnswers[i] === questions[i].correct_answer) {
+                score++;
+            }
+        }
+        document.getElementById('quiz-container').innerHTML = `
+            <h2>Quiz completed!</h2>
+            <p>Your score is ${score} out of ${questions.length}</p>
+        `;
+        document.getElementById('next-button').style.display = 'none';
+
+        // Send the answers to the server
+        fetch('/quiz/submit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ answers: userAnswers })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Answers saved:', data);
+            stopCamera();
+        })
+        .catch(error => console.error('Error saving answers:', error));
+    }
+
+    // Function to start the camera
+    function startCamera() {
+        const video = document.getElementById('camera');
+        const cameraContainer = document.getElementById('camera-container');
+        cameraContainer.style.display = 'block'; // Show the container
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+                videoStream = stream; // Save the stream to stop it later
+                captureInterval = setInterval(captureImage, 5000); // Capture image every 5 seconds
+            })
+            .catch(error => {
+                console.error('Error accessing webcam:', error);
+                alert('Camera permission denied or unavailable.');
+            });
+    }
+
+    // Function to capture image from the camera
+    function captureImage() {
+        const video = document.getElementById('camera');
+        if (video.srcObject) {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL('image/png');
+
+            // Send the captured image to the server
+            fetch('/quiz/uploadImage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image: imageData })
+            })
+            .then(response => response.json())
+            .then(data => console.log('Image saved:', data))
+            .catch(error => console.error('Error uploading image:', error));
+        }
+    }
+
+    // Function to stop the camera
+    function stopCamera() {
+        console.log('Stopping the camera...');
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+            videoStream = null;
+        }
+        clearInterval(captureInterval); // Clear the image capture interval
+        document.getElementById('camera-container').style.display = 'none';
+        console.log('Camera stopped.');
+    }
+
+    // Stop the camera when the page is closed or navigated away
+    window.addEventListener('beforeunload', stopCamera);
+
+    // Handle permission changes
+    navigator.permissions.query({ name: 'camera' }).then(permissionStatus => {
+        permissionStatus.onchange = function () {
+            if (permissionStatus.state === 'denied') {
+                stopCamera();
+            }
+        };
+    });
+</script>
+</body>
+</html>
