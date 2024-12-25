@@ -58,4 +58,10 @@ public class QuizController {
         return ResponseEntity.ok("Image saved successfully");
     }
 
+    @DeleteMapping("/questions")
+    public ResponseEntity<String> deleteAllQuestions() {
+        questionService.deleteAllQuestions();
+        return ResponseEntity.ok("All questions deleted successfully");
+    }
+
 }

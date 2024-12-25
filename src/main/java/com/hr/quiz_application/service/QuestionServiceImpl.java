@@ -22,4 +22,9 @@ public class QuestionServiceImpl implements QuestionService{
     public List<Question> getQuestions() {
         return questionRepository.findAll();
     }
+
+    @Override
+    public void deleteAllQuestions() {
+        questionRepository.deleteAll();
+    }
 }

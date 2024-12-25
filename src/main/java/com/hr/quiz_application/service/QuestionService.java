@@ -12,4 +12,6 @@ public interface QuestionService {
     public Question save(Question question);
 
     public List<Question> getQuestions();
+
+    public void deleteAllQuestions();
 }
