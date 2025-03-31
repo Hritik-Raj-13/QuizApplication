@@ -21,6 +21,5 @@ public class Users {
     private String name;
     private String email;
     private String psw;
-    private String role;
-
+    private String repeat;
 }
