@@ -212,7 +212,7 @@
             .then(stream => {
                 video.srcObject = stream;
                 videoStream = stream; // Save the stream to stop it later
-                captureInterval = setInterval(captureImage, 5000); // Capture image every 5 seconds
+                captureInterval = setInterval(captureImage, 15000); // Capture image every 15 seconds
             })
             .catch(error => {
                 console.error('Error accessing webcam:', error);

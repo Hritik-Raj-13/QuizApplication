@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -122,11 +122,10 @@
 <div class="container">
   <h2>Upload Questions CSV</h2>
   <form action="/admin/uploadCSV" method="post" enctype="multipart/form-data">
-    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
     <input type="file" name="file" accept=".csv" required>
     <button type="submit">Upload</button>
   </form>
-  <p th:if="${message}" th:text="${message}"></p>
+  <p th:if="${message != null}" th:text="${message}"></p>
   <div class="button-container">
     <button class="quiz-button" onclick="window.location.href='/quiz/questions'">View All Questions</button>
     <button class="database-button" onclick="window.location.href='/h2-console/'">Go to Database</button>
